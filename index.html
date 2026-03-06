@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>SYDV PTT Format Donusturucu</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script defer src="https://cloud.umami.is/script.js" data-website-id="9fd06d28-7a61-451e-8dd2-a33f01d9f9f1"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#e8e4dc;--surface:#f2ede5;--border:#c8c0b0;--border2:#b8b0a0;--text:#1a1814;--muted:#6b6558;--blue:#1a4a8a;--blue-light:#2860b0;--red:#cc2222;--green:#1a7a3a;--yellow:#c8a010;--header-bg:#1a3060;--header-text:#e8e4dc;}
@@ -58,9 +57,29 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
 .hata-item{padding:3px 6px;border-left:3px solid var(--red);background:#fff0f0;margin-bottom:3px;font-size:11px;}
 .hata-item.warn{border-color:var(--yellow);background:#fffaf0;}
 .hata-empty{color:var(--green);font-size:12px;padding:8px;}
+
+.login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;}
+.login-box{background:var(--surface);border:2px inset var(--border);width:320px;}
+.login-title{background:var(--header-bg);color:var(--header-text);padding:6px 10px;font-size:13px;font-weight:bold;text-align:center;}
+.login-body{padding:20px;}
+.login-body .field{margin-bottom:12px;}
+.login-err{color:var(--red);font-size:11px;margin-bottom:8px;display:none;}
+.login-body .btn{width:100%;margin-top:4px;}
 </style>
 </head>
 <body>
+
+<div class="login-overlay" id="login_overlay">
+  <div class="login-box">
+    <div class="login-title">SYDV PTT Donusturucu — Giris</div>
+    <div class="login-body">
+      <div class="field"><label>Kullanici Adi</label><input id="login_user" type="text" autocomplete="off"/></div>
+      <div class="field"><label>Sifre</label><input id="login_pass" type="password" autocomplete="off"/></div>
+      <div class="login-err" id="login_err">Kullanici adi veya sifre hatali.</div>
+      <button class="btn primary login-btn" id="btn_login">GIRIS YAP</button>
+    </div>
+  </div>
+</div>
 <div class="titlebar">
   <span>&#128203;</span>
   <span class="titlebar-title">SYDV dosyasını PTT dosyası formatına dönüştür</span>
@@ -78,7 +97,7 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
             <div class="field"><label>ODEME TURU</label><div style="display:flex;gap:8px;align-items:center"><input id="odeme_turu" type="text" value="M" maxlength="1" style="width:50px"/><div class="odeme-badge" id="odeme_badge">M</div></div></div>
           </div>
           <div class="form-grid" style="margin-bottom:10px">
-            <div class="field"><label>ODEME KODU</label><input id="kurum_kodu" type="text" placeholder="4168" maxlength="5"/></div>
+            <div class="field"><label>KURUM KODU</label><input id="kurum_kodu" type="text" placeholder="4168" maxlength="5"/></div>
             <div class="field"><label>MERKEZ NO</label><input id="merkez_no" type="text" placeholder="08813" maxlength="5"/></div>
             <div class="field"><label>DOSYA BASI</label><input id="dosya_basi" type="text" placeholder="B" maxlength="1"/></div>
           </div>
@@ -90,10 +109,6 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
           </div>
           <div class="field" style="margin-top:8px"><label>GONDERME ZAMANI</label><input id="gonderme_zamani" type="text" placeholder="YYYYMMDD" maxlength="8"/></div>
           <div class="field" style="margin-top:8px"><label>SON ODEME TARIHI</label><input id="son_odeme" type="text" placeholder="YYYYMMDD" maxlength="8"/></div>
-          <div class="form-grid cols2" style="margin-top:8px">
-            <div class="field"><label>AD ALAN UZUNLUGU</label><input id="ad_len" type="number" value="50" min="1" max="100"/></div>
-            <div class="field"><label>SOYAD ALAN UZUNLUGU</label><input id="soyad_len" type="number" value="50" min="1" max="100"/></div>
-          </div>
         </div>
         <div class="right">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 80" width="150" height="75">
@@ -156,11 +171,34 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
     <span>Tutar: <strong id="st_tutar">0,00 TL</strong></span>
   </div>
 </div>
+
 <script>
+var KULLANICILAR=[
+  {kullanici:'atakan',sifre:'123456',ayarlar:{kurum_kodu:'555',merkez_no:'08813',dosya_basi:'B',ili:'ISTANBUL',sube_no:'00',ilce:'SARIYER',sydv_hesap:'00000000',odeme_turu:'M'}}
+];
+
+function loginYap(){
+  var u=document.getElementById('login_user').value.trim();
+  var p=document.getElementById('login_pass').value;
+  var bulunan=KULLANICILAR.find(function(k){return k.kullanici===u&&k.sifre===p;});
+  if(!bulunan){document.getElementById('login_err').style.display='block';return;}
+  document.getElementById('login_overlay').style.display='none';
+  Object.keys(bulunan.ayarlar).forEach(function(k){
+    var el=document.getElementById(k);
+    if(el){el.value=bulunan.ayarlar[k];}
+    ayarlar[k]=bulunan.ayarlar[k];
+  });
+  document.getElementById('odeme_badge').textContent=bulunan.ayarlar.odeme_turu||'M';
+  lg('Giris yapildi: '+u);
+}
 var xlsRows=[],outputContent='',hatalar=[];
-var ayarlar={kurum_kodu:'4168',merkez_no:'08813',dosya_basi:'B',ili:'ISTANBUL',sube_no:'00',ilce:'SARIYER',sydv_hesap:'00000000',odeme_turu:'M',odeme_donemi:'',odeme_bas_tarihi:'',gonderme_zamani:'',son_odeme:'',ad_len:50,soyad_len:50};
+var ayarlar={kurum_kodu:'4168',merkez_no:'08813',dosya_basi:'B',ili:'ISTANBUL',sube_no:'00',ilce:'SARIYER',sydv_hesap:'00000000',odeme_turu:'M',odeme_donemi:'',odeme_bas_tarihi:'',gonderme_zamani:'',son_odeme:''};
 
 document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('btn_login').addEventListener('click',loginYap);
+  document.getElementById('login_pass').addEventListener('keydown',function(e){if(e.key==='Enter')loginYap();});
+  document.getElementById('login_user').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('login_pass').focus();});
+  document.getElementById('login_user').focus();
   Object.keys(ayarlar).forEach(function(k){var e=document.getElementById(k);if(e)e.value=ayarlar[k];});
   var now=new Date();
   document.getElementById('odeme_donemi').value=now.getFullYear()+String(now.getMonth()+1).padStart(2,'0');
@@ -186,7 +224,7 @@ function iniOku(file){var r=new FileReader();r.onload=function(e){var map={kurum
 
 function iniKaydet(){readForm();var c='[DEGISKEN]\n\ni_kurumkodu='+ayarlar.kurum_kodu+'\ni_birim_adi=SYDV\ni_ili='+ayarlar.ili+'\ni_merkezno='+ayarlar.merkez_no+'\ni_subeno='+ayarlar.sube_no+'\n\n\ni_ilce='+ayarlar.ilce+'\ni_sydv_hesap='+ayarlar.sydv_hesap+'\ni_dosya_basi='+ayarlar.dosya_basi+'\ni_odeme_turu='+ayarlar.odeme_turu+'\n';var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/plain'}));a.download='ayarlar.ini';a.click();lg('ini kaydedildi.');}
 
-function readForm(){['kurum_kodu','merkez_no','dosya_basi','ili','sube_no','ilce','sydv_hesap','odeme_turu','odeme_donemi','odeme_bas_tarihi','gonderme_zamani','son_odeme','ad_len','soyad_len'].forEach(function(f){var e=document.getElementById(f);if(e)ayarlar[f]=e.value.trim();});}
+function readForm(){['kurum_kodu','merkez_no','dosya_basi','ili','sube_no','ilce','sydv_hesap','odeme_turu','odeme_donemi','odeme_bas_tarihi','gonderme_zamani','son_odeme'].forEach(function(f){var e=document.getElementById(f);if(e)ayarlar[f]=e.value.trim();});}
 
 function procXls(file){
   document.getElementById('xls_name').textContent=file.name;
@@ -235,8 +273,8 @@ function pTutar(v){if(typeof v==='number')return Math.round(v*100);var s=String(
 function tcGecerli(tc){if(!tc||tc.length!==11||!/^\d{11}$/.test(tc)||tc[0]==='0')return false;var d=tc.split('').map(Number);if((d[0]+d[1]+d[2]+d[3]+d[4]+d[5]+d[6]+d[7]+d[8]+d[9])%10!==d[10])return false;var tek=(d[0]+d[2]+d[4]+d[6]+d[8])*7-(d[1]+d[3]+d[5]+d[7]);if(((tek%10)+10)%10!==d[9])return false;return true;}
 function hataDenetimi(){readForm();hatalar=[];var ec=0;xlsRows.forEach(function(r,i){var sat=i+2;if(!tcGecerli(r.tc)){hatalar.push({t:'e',m:'Satir '+sat+': Gecersiz TC: "'+r.tc+'"'});ec++;}});var div=document.getElementById('hata_listesi');div.innerHTML=hatalar.length===0?'<div class="hata-empty">TC denetimi gecti. '+xlsRows.length+' kayitin tumu gecerli.</div>':hatalar.map(function(h){return'<div class="hata-item">'+h.m+'</div>';}).join('');document.getElementById('st_hata').textContent=ec;switchTab('hatadenetim');lg('TC denetimi: '+ec+' hatali kayit.');}
 
-function donustur(){readForm();if(xlsRows.length===0){lg('Once Excel secin.');return;}document.getElementById('progress_wrap').style.display='block';document.getElementById('btn_donustur').disabled=true;setSt('Donusturuluyor...','warn');var kurum=pad(ayarlar.kurum_kodu,5),donemi=ayarlar.odeme_donemi||'000000',sube=pad(ayarlar.sube_no,2),merkez=pad(ayarlar.merkez_no,5),odT=(ayarlar.odeme_turu||'M')[0],il2=pR(ayarlar.ili.toUpperCase(),14),t1=ayarlar.odeme_bas_tarihi||gToday(),t2=ayarlar.son_odeme||gMonthEnd();var al=parseInt(ayarlar.ad_len)||50,sl=parseInt(ayarlar.soyad_len)||50;var lines=['H'+kurum+donemi+sube+'000000'+sp(265)];var tot=0,tk=document.getElementById('tekrar_tc').checked,ts={},skip=0;
-function chunk(s){var e=Math.min(s+100,xlsRows.length);for(var i=s;i<e;i++){var r=xlsRows[i];if(!tk&&ts[r.tc]){skip++;continue;}if(r.tc)ts[r.tc]=true;var tu=String(r.tutar).padStart(8,'0'),hes=r.iban?r.iban.replace(/\s/g,'').slice(-10):r.gsm.replace(/\D/g,'').slice(-10);if(!hes||hes.length<3)hes=sp(10);lines.push('D'+sp(9)+r.tc.padEnd(11)+pR(r.ad,al)+pR(r.soyad,sl)+pR(r.adres,80)+pR(il2.trim(),14)+' '+t1.padEnd(8)+t2.padEnd(8)+'00000000'+tu+sp(8)+r.tc.padEnd(11)+merkez+sube+odT+hes.padEnd(11));tot+=r.tutar;}var pct=Math.round(e/xlsRows.length*100);document.getElementById('progress_fill').style.width=pct+'%';document.getElementById('progress_text').textContent=e+' / '+xlsRows.length;if(e<xlsRows.length){setTimeout(function(){chunk(e);},0);}else{fin();}}
+function donustur(){readForm();if(xlsRows.length===0){lg('Once Excel secin.');return;}document.getElementById('progress_wrap').style.display='block';document.getElementById('btn_donustur').disabled=true;setSt('Donusturuluyor...','warn');var kurum=pad(ayarlar.kurum_kodu,5),donemi=ayarlar.odeme_donemi||'000000',sube=pad(ayarlar.sube_no,2),merkez=pad(ayarlar.merkez_no,5),odT=(ayarlar.odeme_turu||'M')[0],il2=pR(ayarlar.ili.toUpperCase(),14),t1=ayarlar.odeme_bas_tarihi||gToday(),t2=ayarlar.son_odeme||gMonthEnd();var lines=['H'+kurum+donemi+sube+'000000'+sp(265)];var tot=0,tk=document.getElementById('tekrar_tc').checked,ts={},skip=0;
+function chunk(s){var e=Math.min(s+100,xlsRows.length);for(var i=s;i<e;i++){var r=xlsRows[i];if(!tk&&ts[r.tc]){skip++;continue;}if(r.tc)ts[r.tc]=true;var tu=String(r.tutar).padStart(8,'0'),hes=r.iban?r.iban.replace(/\s/g,'').slice(-10):r.gsm.replace(/\D/g,'').slice(-10);if(!hes||hes.length<3)hes=sp(10);lines.push('D'+sp(9)+r.tc.padEnd(11)+pR(r.ad,50)+pR(r.soyad,50)+pR(r.adres,80)+pR(il2.trim(),14)+' '+t1.padEnd(8)+t2.padEnd(8)+'00000000'+tu+sp(8)+r.tc.padEnd(11)+merkez+sube+odT+hes.padEnd(11));tot+=r.tutar;}var pct=Math.round(e/xlsRows.length*100);document.getElementById('progress_fill').style.width=pct+'%';document.getElementById('progress_text').textContent=e+' / '+xlsRows.length;if(e<xlsRows.length){setTimeout(function(){chunk(e);},0);}else{fin();}}
 function fin(){var kn=lines.length-1;lines.push('F'+String(kn).padStart(7,'0')+'0'+String(tot).padStart(15,'0')+sp(261));outputContent=lines.join('\r\n')+'\r\n';document.getElementById('preview_area').textContent=lines.slice(0,50).join('\n');var tl=(tot/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,'.');document.getElementById('st_tutar').textContent=tl+' TL';document.getElementById('st_kayit').textContent=kn;document.getElementById('btn_indir').disabled=false;document.getElementById('btn_donustur').disabled=false;setSt('Hazir','ok');lg('TAMAM: '+kn+' kayit, '+tl+' TL. Atlanan: '+skip);switchTab('onizleme');}
 setTimeout(function(){chunk(0);},0);}
 
