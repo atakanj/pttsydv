@@ -59,7 +59,7 @@ var KULLANICILAR=[
       "sydv_hesap": "00000000",
       "odeme_turu": "M"
     }
-  }
+  },
     {
     "kullanici": "memhet",
     "salt": "c744f41ef765992163d8a52d7b88f5b1",
@@ -74,5 +74,5 @@ var KULLANICILAR=[
       "sydv_hesap": "00000000",
       "odeme_turu": "M"
     }
-  },
+  }
 ];
