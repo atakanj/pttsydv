@@ -31,8 +31,8 @@ var KULLANICILAR=[
   },
   {
     "kullanici": "ahmet",
-    "salt": "595fe21bd43d1bcf951c5f15e728cc3a",
-    "hash": "3293086a33aa90c13ebcd1ac51f5c62a03e579caceb2c0957c8bae7688817f6e",
+    "salt": "c744f41ef765992163d8a52d7b88f5b1",
+    "hash": "b4952f828e38b4686d286d1778e7a584de5680e06eccb0ebe71455ef55d52d20",
     "ayarlar": {
       "kurum_kodu": "6767",
       "merkez_no": "08813",
