@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>SYDV PTT Format Donusturucu</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="kullanicilar.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#e8e4dc;--surface:#f2ede5;--border:#c8c0b0;--border2:#b8b0a0;--text:#1a1814;--muted:#6b6558;--blue:#1a4a8a;--blue-light:#2860b0;--red:#cc2222;--green:#1a7a3a;--yellow:#c8a010;--header-bg:#1a3060;--header-text:#e8e4dc;}
@@ -71,12 +72,12 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
 
 <div class="login-overlay" id="login_overlay">
   <div class="login-box">
-    <div class="login-title">SYDV PTT Donusturucu — Giris</div>
+    <div class="login-title">SYDV PTT Dönüştürücü — Giriş</div>
     <div class="login-body">
-      <div class="field"><label>Kullanici Adi</label><input id="login_user" type="text" autocomplete="off"/></div>
-      <div class="field"><label>Sifre</label><input id="login_pass" type="password" autocomplete="off"/></div>
-      <div class="login-err" id="login_err">Kullanici adi veya sifre hatali.</div>
-      <button class="btn primary login-btn" id="btn_login">GIRIS YAP</button>
+      <div class="field"><label>Kullanıcı Adı</label><input id="login_user" type="text" autocomplete="off"/></div>
+      <div class="field"><label>Şifre</label><input id="login_pass" type="password" autocomplete="off"/></div>
+      <div class="login-err" id="login_err">Kullanıcı adı veya şifre hatalı.</div>
+      <button class="btn primary login-btn" id="btn_login">GİRİŞ YAP</button>
     </div>
   </div>
 </div>
@@ -173,9 +174,8 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
 </div>
 
 <script>
-var KULLANICILAR=[
-  {kullanici:'atakan',sifre:'123456',ayarlar:{kurum_kodu:'555',merkez_no:'08813',dosya_basi:'B',ili:'ISTANBUL',sube_no:'00',ilce:'SARIYER',sydv_hesap:'00000000',odeme_turu:'M'}}
-];
+
+
 
 function loginYap(){
   var u=document.getElementById('login_user').value.trim();
