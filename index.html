@@ -66,9 +66,38 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
 .login-body .field{margin-bottom:12px;}
 .login-err{color:var(--red);font-size:11px;margin-bottom:8px;display:none;}
 .login-body .btn{width:100%;margin-top:4px;}
+
+.admin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:9998;display:none;align-items:center;justify-content:center;}
+.admin-box{background:var(--surface);border:2px inset var(--border);width:400px;}
+.admin-title{background:var(--header-bg);color:var(--header-text);padding:6px 10px;font-size:13px;font-weight:bold;text-align:center;}
+.admin-body{padding:20px;}
+.admin-body .field{margin-bottom:12px;}
+.admin-msg{font-size:11px;margin-bottom:8px;display:none;}
+.admin-msg.ok{color:var(--green);}
+.admin-msg.err{color:var(--red);}
 </style>
 </head>
 <body>
+
+
+<div class="admin-overlay" id="admin_overlay">
+  <div class="admin-box">
+    <div class="admin-title">ADMİN — Şifre Yönetimi</div>
+    <div class="admin-body">
+      <div class="field">
+        <label>Kullanıcı</label>
+        <select id="admin_user" style="background:#fff;border:2px inset var(--border2);padding:3px 6px;font-family:'Courier New',monospace;font-size:13px;width:100%;"></select>
+      </div>
+      <div class="field"><label>Yeni Şifre</label><input id="admin_pass1" type="password"/></div>
+      <div class="field"><label>Şifre Tekrar</label><input id="admin_pass2" type="password"/></div>
+      <div class="admin-msg" id="admin_msg"></div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button class="btn success" id="btn_admin_kaydet">KAYDET VE İNDİR</button>
+        <button class="btn" id="btn_admin_cikis">ÇIKIŞ</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="login-overlay" id="login_overlay">
   <div class="login-box">
@@ -177,6 +206,57 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
 
 
 
+
+async function hashSifre(salt,sifre){
+  var enc=new TextEncoder();
+  var buf=await crypto.subtle.digest('SHA-256',enc.encode(salt+sifre));
+  return Array.from(new Uint8Array(buf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+
+function adminPaneliAc(){
+  var sel=document.getElementById('admin_user');
+  sel.innerHTML='';
+  KULLANICILAR.filter(function(k){return k.rol!=='admin';}).forEach(function(k){
+    var o=document.createElement('option');
+    o.value=k.kullanici; o.textContent=k.kullanici;
+    sel.appendChild(o);
+  });
+  document.getElementById('admin_pass1').value='';
+  document.getElementById('admin_pass2').value='';
+  document.getElementById('admin_msg').style.display='none';
+  document.getElementById('admin_overlay').style.display='flex';
+}
+
+async function adminKaydet(){
+  var u=document.getElementById('admin_user').value;
+  var p1=document.getElementById('admin_pass1').value;
+  var p2=document.getElementById('admin_pass2').value;
+  var msg=document.getElementById('admin_msg');
+  if(!p1){msg.className='admin-msg err';msg.textContent='Sifre bos olamaz.';msg.style.display='block';return;}
+  if(p1!==p2){msg.className='admin-msg err';msg.textContent='Sifreler eslesmıyor.';msg.style.display='block';return;}
+  var arr=Array.from(crypto.getRandomValues(new Uint8Array(16)));
+  var newSalt=arr.map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+  var newHash=await hashSifre(newSalt,p1);
+  var k=KULLANICILAR.find(function(x){return x.kullanici===u;});
+  if(k){k.salt=newSalt;k.hash=newHash;}
+  var q="'";
+  var entries=KULLANICILAR.map(function(x){
+    var s=q+'  {kullanici:'+q+x.kullanici+q+',salt:'+q+x.salt+q+',hash:'+q+x.hash+q;
+    if(x.rol)s+=',rol:'+q+x.rol+q;
+    s+=',ayarlar:{kurum_kodu:'+q+x.ayarlar.kurum_kodu+q+',merkez_no:'+q+x.ayarlar.merkez_no+q+',dosya_basi:'+q+x.ayarlar.dosya_basi+q+',ili:'+q+x.ayarlar.ili+q+',sube_no:'+q+x.ayarlar.sube_no+q+',ilce:'+q+x.ayarlar.ilce+q+',sydv_hesap:'+q+x.ayarlar.sydv_hesap+q+',odeme_turu:'+q+x.ayarlar.odeme_turu+q+'}}'+q;
+    return s;
+  });
+  var lines='var KULLANICILAR=[\n'+entries.join(',\n')+'\n];\n';
+  var blob=new Blob([lines],{type:'text/javascript'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='kullanicilar.js';
+  a.click();
+  msg.className='admin-msg ok';
+  msg.textContent=u+' sifresi guncellendi. Dosyayi sunucuya yukleyin.';
+  msg.style.display='block';
+}
+
 async function loginYap(){
   var u=document.getElementById('login_user').value.trim();
   var p=document.getElementById('login_pass').value;
@@ -187,6 +267,7 @@ async function loginYap(){
   var hashHex=Array.from(new Uint8Array(hashBuf)).map(function(b){return b.toString(16).padStart(2,'0');}).join('');
   if(hashHex!==bulunan.hash){document.getElementById('login_err').style.display='block';return;}
   document.getElementById('login_overlay').style.display='none';
+  if(bulunan.rol==='admin'){adminPaneliAc();return;}
   Object.keys(bulunan.ayarlar).forEach(function(k){
     var el=document.getElementById(k);
     if(el){el.value=bulunan.ayarlar[k];}
@@ -200,6 +281,8 @@ var ayarlar={kurum_kodu:'4168',merkez_no:'08813',dosya_basi:'B',ili:'ISTANBUL',s
 
 document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('btn_login').addEventListener('click',loginYap);
+  document.getElementById('btn_admin_kaydet').addEventListener('click',adminKaydet);
+  document.getElementById('btn_admin_cikis').addEventListener('click',function(){document.getElementById('admin_overlay').style.display='none';document.getElementById('login_user').value='';document.getElementById('login_pass').value='';document.getElementById('login_overlay').style.display='flex';});
   document.getElementById('login_pass').addEventListener('keydown',function(e){if(e.key==='Enter')loginYap();});
   document.getElementById('login_user').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('login_pass').focus();});
   document.getElementById('login_user').focus();
