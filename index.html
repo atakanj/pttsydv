@@ -239,14 +239,7 @@ async function adminKaydet(){
   var newHash=await hashSifre(newSalt,p1);
   var k=KULLANICILAR.find(function(x){return x.kullanici===u;});
   if(k){k.salt=newSalt;k.hash=newHash;}
-  var q="'";
-  var entries=KULLANICILAR.map(function(x){
-    var s=q+'  {kullanici:'+q+x.kullanici+q+',salt:'+q+x.salt+q+',hash:'+q+x.hash+q;
-    if(x.rol)s+=',rol:'+q+x.rol+q;
-    s+=',ayarlar:{kurum_kodu:'+q+x.ayarlar.kurum_kodu+q+',merkez_no:'+q+x.ayarlar.merkez_no+q+',dosya_basi:'+q+x.ayarlar.dosya_basi+q+',ili:'+q+x.ayarlar.ili+q+',sube_no:'+q+x.ayarlar.sube_no+q+',ilce:'+q+x.ayarlar.ilce+q+',sydv_hesap:'+q+x.ayarlar.sydv_hesap+q+',odeme_turu:'+q+x.ayarlar.odeme_turu+q+'}}'+q;
-    return s;
-  });
-  var lines='var KULLANICILAR=[\n'+entries.join(',\n')+'\n];\n';
+  var lines='var KULLANICILAR='+JSON.stringify(KULLANICILAR,null,2)+';';
   var blob=new Blob([lines],{type:'text/javascript'});
   var a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
