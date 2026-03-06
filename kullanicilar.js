@@ -60,4 +60,19 @@ var KULLANICILAR=[
       "odeme_turu": "M"
     }
   }
+    {
+    "kullanici": "memhet",
+    "salt": "c744f41ef765992163d8a52d7b88f5b1",
+    "hash": "b4952f828e38b4686d286d1778e7a584de5680e06eccb0ebe71455ef55d52d20",
+    "ayarlar": {
+      "kurum_kodu": "0101",
+      "merkez_no": "08813",
+      "dosya_basi": "B",
+      "ili": "ADANA",
+      "sube_no": "00",
+      "ilce": "SARIYER",
+      "sydv_hesap": "00000000",
+      "odeme_turu": "M"
+    }
+  },
 ];
