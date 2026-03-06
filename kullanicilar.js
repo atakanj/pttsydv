@@ -1,8 +1,8 @@
 var KULLANICILAR=[
   {
     "kullanici": "atakan",
-    "salt": "4f2939410f8e6bbd396a40b4b76af678",
-    "hash": "9d5f60f462c18c398ea2844ee9312e6b065b545a35b475365e6cc9afacc65eb4",
+    "salt": "73725a1f1315ceafc5b4dab9143a8d62",
+    "hash": "6edc3d42b009546e2dbeaec5f245d13c72b70c5eedd3c5c85ad8b5dc72b261a0",
     "ayarlar": {
       "kurum_kodu": "555",
       "merkez_no": "08813",
