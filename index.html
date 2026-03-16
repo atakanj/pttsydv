@@ -138,8 +138,23 @@ body{font-family:'Courier New',monospace;background:var(--bg);color:var(--text);
             <div class="field"><label>SOYAD ALAN UZUNLUGU</label><input id="soyad_len" type="number" value="50" min="1" max="100"/></div>
           </div>
           <input id="dosya_basi" type="hidden" value="B"/>
-          <input id="ili" type="hidden" value="ISTANBUL"/>
           <input id="sube_no" type="hidden" value="00"/>
+          <div id="konut_alanlar" style="display:none;margin-bottom:10px;">
+            <div class="form-grid cols2" style="margin-bottom:8px">
+              <div class="field"><label>İL</label>
+                <select id="ili_sel" style="background:#fff;border:2px inset var(--border2);padding:3px 6px;font-family:'Courier New',monospace;font-size:13px;color:var(--text);width:100%;">
+                  <option value="">-- Seçin --</option>
+                  <option value="ANKARA">ANKARA</option>
+                </select>
+              </div>
+              <div class="field"><label>İLÇE</label>
+                <select id="ilce_sel" style="background:#fff;border:2px inset var(--border2);padding:3px 6px;font-family:'Courier New',monospace;font-size:13px;color:var(--text);width:100%;">
+                  <option value="">-- Önce İl Seçin --</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <input id="ili" type="hidden" value="ISTANBUL"/>
           <input id="ilce" type="hidden" value="SARIYER"/>
           <input id="sydv_hesap" type="hidden" value="00000000"/>
           <input id="gonderme_zamani" type="hidden" value=""/>
@@ -254,6 +269,59 @@ async function adminKaydet(){
   msg.style.display='block';
 }
 
+
+var KONUT_DATA={
+  'ANKARA':[
+    {ilce:'ALTINDAĞ',merkez:'13193'},
+    {ilce:'AYAŞ',merkez:'919'},
+    {ilce:'BALA',merkez:'1180'},
+    {ilce:'BEYPAZARI',merkez:'1511'},
+    {ilce:'ÇAMLIDERE',merkez:'6684'},
+    {ilce:'ÇANKAYA',merkez:'13540'},
+    {ilce:'ÇUBUK',merkez:'2691'},
+    {ilce:'ELMADAĞ',merkez:'3459'},
+    {ilce:'GÜDÜL',merkez:'4606'},
+    {ilce:'HAYMANA',merkez:'5140'},
+    {ilce:'KALECİK',merkez:'4101'},
+    {ilce:'KIZILCAHAMAM',merkez:'6684'},
+    {ilce:'NALLIHAN',merkez:'8029'},
+    {ilce:'POLATLI',merkez:'8763'},
+    {ilce:'ŞEREFLİKOÇHİSAR',merkez:'10058'},
+    {ilce:'YENİMAHALLE',merkez:'13623'},
+    {ilce:'GÖLBAŞI / ANKARA',merkez:'4473'},
+    {ilce:'KEÇİÖREN',merkez:'13961'},
+    {ilce:'MAMAK',merkez:'14852'},
+    {ilce:'SİNCAN',merkez:'15053'},
+    {ilce:'KAZAN',merkez:'6429'},
+    {ilce:'AKYURT',merkez:'4101'},
+    {ilce:'ETİMESGUT',merkez:'12898'},
+    {ilce:'EVREN',merkez:'10058'},
+    {ilce:'PURSAKLAR',merkez:'12625'}
+  ]
+};
+
+function ilDegisti(){
+  var il=document.getElementById('ili_sel').value;
+  var ilceSel=document.getElementById('ilce_sel');
+  ilceSel.innerHTML='<option value="">-- Seçin --</option>';
+  document.getElementById('merkez_no').value='';
+  if(!il||!KONUT_DATA[il])return;
+  KONUT_DATA[il].forEach(function(d){
+    var o=document.createElement('option');
+    o.value=d.ilce; o.textContent=d.ilce; o.dataset.merkez=d.merkez;
+    ilceSel.appendChild(o);
+  });
+  document.getElementById('ili').value=il;
+}
+
+function ilceDegisti(){
+  var ilceSel=document.getElementById('ilce_sel');
+  var opt=ilceSel.options[ilceSel.selectedIndex];
+  if(!opt||!opt.dataset.merkez)return;
+  document.getElementById('merkez_no').value=opt.dataset.merkez;
+  document.getElementById('ilce').value=opt.value;
+}
+
 async function loginYap(){
   var u=document.getElementById('login_user').value.trim();
   var p=document.getElementById('login_pass').value;
@@ -276,6 +344,22 @@ async function loginYap(){
   var ot=document.getElementById('odeme_turu').value;
   if(ot==='M'){mn.readOnly=true;mn.style.background='#e8e8e8';}
   else{mn.readOnly=false;mn.style.background='#fff';}
+  // Readonly alanlar - kullanıcı bazlı
+  var roList=['kurum_kodu','odeme_turu','ad_len','soyad_len','merkez_no'];
+  // Önce hepsini aç
+  roList.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){el.readOnly=false;el.style.background='#fff';el.style.pointerEvents='';}
+  });
+  // Sonra kullanıcının readonly listesini kilitle
+  var ro=bulunan.readonly||[];
+  ro.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){
+      if(el.tagName==='SELECT'){el.style.pointerEvents='none';el.style.background='#e8e8e8';}
+      else{el.readOnly=true;el.style.background='#e8e8e8';}
+    }
+  });
 }
 var xlsRows=[],outputContent='',hatalar=[];
 var ayarlar={kurum_kodu:'4168',merkez_no:'08813',dosya_basi:'B',ili:'ISTANBUL',sube_no:'00',ilce:'SARIYER',sydv_hesap:'00000000',odeme_turu:'M',odeme_donemi:'',odeme_bas_tarihi:'',gonderme_zamani:'',son_odeme:'',ad_len:50,soyad_len:50};
@@ -284,9 +368,21 @@ document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('btn_login').addEventListener('click',loginYap);
   document.getElementById('odeme_turu').addEventListener('change',function(){
     var mn=document.getElementById('merkez_no');
-    if(this.value==='M'){mn.value='08813';mn.readOnly=true;mn.style.background='#e8e8e8';}
-    else{mn.readOnly=false;mn.style.background='#fff';mn.value='';}
+    var ka=document.getElementById('konut_alanlar');
+    if(this.value==='M'){
+      mn.value='08813';mn.readOnly=true;mn.style.background='#e8e8e8';
+      ka.style.display='none';
+      document.getElementById('ili').value='ISTANBUL';
+      document.getElementById('ilce').value='SARIYER';
+    }else{
+      mn.readOnly=false;mn.style.background='#fff';mn.value='';
+      ka.style.display='block';
+      document.getElementById('ili_sel').value='';
+      document.getElementById('ilce_sel').innerHTML='<option value="">-- Önce İl Seçin --</option>';
+    }
   });
+  document.getElementById('ili_sel').addEventListener('change',ilDegisti);
+  document.getElementById('ilce_sel').addEventListener('change',ilceDegisti);
   // Başlangıçta merkezde seçili, merkez no kilitli
   var mn=document.getElementById('merkez_no');
   mn.readOnly=true;mn.style.background='#e8e8e8';
@@ -335,18 +431,18 @@ function procXls(file){
       xlsRows=[];
       for(var i=1;i<raw.length;i++){
         var row=raw[i];
-        var tc=S2(row[11]);
-        var tutar=pTutar(row[2]!==undefined&&row[2]!==''?row[2]:(row[3]!==undefined?row[3]:''));
+        var tc=S2(row[0]);
+        var tutar=pTutar(row[3]!==undefined&&row[3]!==''?row[3]:'');
         if(!tc&&!tutar)continue;
         xlsRows.push({
           tc:tc,
-          ad:S2(row[9]).toUpperCase(),
-          soyad:S2(row[10]).toUpperCase(),
-          adres:S2(row[20]),
-          il:S2(row[28]).toUpperCase(),
+          ad:S2(row[1]).toUpperCase(),
+          soyad:S2(row[2]).toUpperCase(),
+          adres:S2(row[4]),
+          il:S2(row[5]).toUpperCase(),
           tutar:tutar,
-          gsm:S2(row[17]),
-          iban:S2(row[30])
+          gsm:S2(row[6]),
+          iban:''
         });
       }
       if(xlsRows.length===0){lg('HATA: Kayit bulunamadi!');setSt('Hata','err');return;}
