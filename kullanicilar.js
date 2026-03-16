@@ -1,15 +1,15 @@
 var KULLANICILAR=[
   {
-    "kullanici": "atakan",
+    "kullanici": "ankaraabisi",
     "salt": "73725a1f1315ceafc5b4dab9143a8d62",
     "hash": "6edc3d42b009546e2dbeaec5f245d13c72b70c5eedd3c5c85ad8b5dc72b261a0",
     "ayarlar": {
       "kurum_kodu": "290",
       "merkez_no": "08813",
       "dosya_basi": "B",
-      "ili": "ANKARA",
+      "ili": "ISTANBUL",
       "sube_no": "00",
-      "ilce": "ABİSİ",
+      "ilce": "SARIYER",
       "sydv_hesap": "00000000",
       "odeme_turu": "M"
     }
